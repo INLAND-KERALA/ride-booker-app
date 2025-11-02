@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ride Booker</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app" class="w-full max-w-md bg-white p-8 md:p-10 rounded-xl shadow-2xl transition-all duration-500">
+
+        <!-- Booking Screen Content (Default View) -->
+        <div id="booking-screen" class="space-y-6">
+            <h1 class="text-3xl font-bold text-center text-indigo-700">Book Your Ride</h1>
+
+            <div class="space-y-4">
+                <!-- Rider Name -->
+                <label class="block">
+                    <span class="text-sm font-medium text-gray-700">Your Name:</span>
+                    <input type="text" id="riderName" placeholder="John Doe"
+                        class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm transition">
+                </label>
+
+                <!-- Pickup Location -->
+                <label class="block">
+                    <span class="text-sm font-medium text-gray-700">Pickup Location:</span>
+                    <input type="text" id="pickupLocation" placeholder="Current Address or Landmark"
+                        class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm transition">
+                </label>
+
+                <!-- Dropoff Location -->
+                <label class="block">
+                    <span class="text-sm font-medium text-gray-700">Dropoff Location:</span>
+                    <input type="text" id="dropoffLocation" placeholder="Destination Address or Landmark"
+                        class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm transition">
+                </label>
+
+                <!-- Pickup Date & Time -->
+                <div>
+                    <span class="text-sm font-medium text-gray-700 block mb-1">Pickup Date & Time:</span>
+                    <div class="flex space-x-2">
+                        <!-- Date Picker -->
+                        <input type="date" id="pickupDate"
+                            class="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm transition">
+
+                        <!-- Hour Dropdown (ddHour) -->
+                        <select id="ddHour"
+                            class="p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm transition">
+                            <!-- Options filled by JavaScript -->
+                        </select>
+
+                        <!-- Minute Dropdown (ddMinute) -->
+                        <select id="ddMinute"
+                            class="p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm transition">
+                            <!-- Options filled by JavaScript -->
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="bookRide()"
+                class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-lg shadow-lg transform transition duration-150 active:scale-95 focus:outline-none focus:ring-4 focus:ring-indigo-500/50">
+                Book My Ride
+            </button>
+        </div>
+
+        <!-- Confirmation Screen Content (Hidden by Default) -->
+        <div id="confirmation-screen" class="hidden text-center p-8 space-y-6">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-16 h-16 mx-auto text-green-500">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+            </svg>
+            <h2 class="text-2xl font-bold text-gray-800">Thank You!</h2>
+            <p class="text-gray-600">Your ride has been successfully booked. A dispatcher will contact you shortly.</p>
+
+            <div id="booking-summary" class="bg-gray-50 p-4 rounded-lg text-left text-sm space-y-1">
+                <p class="font-medium text-gray-900">Summary:</p>
+                <p><strong>Rider:</strong> <span id="summaryRider"></span></p>
+                <p><strong>Pickup:</strong> <span id="summaryPickup"></span></p>
+                <p><strong>Dropoff:</strong> <span id="summaryDropoff"></span></p>
+                <p><strong>Time:</strong> <span id="summaryTime"></span></p>
+            </div>
+
+            <button onclick="bookAnotherRide()"
+                class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg shadow-lg transform transition duration-150 active:scale-95 focus:outline-none focus:ring-4 focus:ring-green-500/50">
+                Book Another Ride
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- Power Apps Logic Translation (JavaScript) ---
+
+        const bookingScreen = document.getElementById('booking-screen');
+        const confirmationScreen = document.getElementById('confirmation-screen');
+        const riderNameInput = document.getElementById('riderName');
+        const pickupLocationInput = document.getElementById('pickupLocation');
+        const dropoffLocationInput = document.getElementById('dropoffLocation');
+        const pickupDateInput = document.getElementById('pickupDate');
+        const ddHour = document.getElementById('ddHour');
+        const ddMinute = document.getElementById('ddMinute');
+
+        // Helper function to fill dropdowns
+        function setupTimeDropdowns() {
+            // Fill Hours (08 to 18)
+            ddHour.innerHTML = ''; // Clear existing
+            for (let i = 8; i <= 18; i++) {
+                const hour = i.toString().padStart(2, '0');
+                const option = new Option(hour, hour);
+                ddHour.add(option);
+            }
+
+            // Fill Minutes (00, 15, 30, 45)
+            ddMinute.innerHTML = ''; // Clear existing
+            ["00", "15", "30", "45"].forEach(minute => {
+                const option = new Option(minute, minute);
+                ddMinute.add(option);
+            });
+        }
+
+        // Equivalent of Power Apps Patch/Navigate (OnSelect for "Book My Ride" button)
+        function bookRide() {
+            const name = riderNameInput.value.trim();
+            const pickup = pickupLocationInput.value.trim();
+            const dropoff = dropoffLocationInput.value.trim();
+            const date = pickupDateInput.value;
+            const hour = ddHour.value;
+            const minute = ddMinute.value;
+
+            // Simple form validation
+            if (!name || !pickup || !dropoff || !date) {
+                // Use a custom message box instead of alert()
+                showMessageBox("Error", "Please fill out all fields (Name, Pickup, Dropoff, and Date) before booking.");
+                return;
+            }
+
+            // In Power Apps, this is where we would Patch the data to SharePoint.
+            // In JavaScript, we'll simulate the successful submission and show the summary.
+
+            const combinedDateTime = new Date(`${date}T${hour}:${minute}:00`);
+            const readableTime = combinedDateTime.toLocaleString();
+
+            // Update confirmation summary (equivalent to displaying submitted data)
+            document.getElementById('summaryRider').textContent = name;
+            document.getElementById('summaryPickup').textContent = pickup;
+            document.getElementById('summaryDropoff').textContent = dropoff;
+            document.getElementById('summaryTime').textContent = readableTime;
+
+
+            // Navigate(ConfirmationScreen, ScreenTransition.Fade)
+            bookingScreen.classList.add('hidden');
+            confirmationScreen.classList.remove('hidden');
+        }
+
+        // Equivalent of Power Apps Reset/Navigate (OnSelect for "Book Another Ride" button)
+        function bookAnotherRide() {
+            // Reset(Control) equivalents
+            riderNameInput.value = '';
+            pickupLocationInput.value = '';
+            dropoffLocationInput.value = '';
+            pickupDateInput.value = '';
+            // Reset dropdowns to the first option
+            ddHour.selectedIndex = 0;
+            ddMinute.selectedIndex = 0;
+
+            // Navigate(BookingScreen, ScreenTransition.Fade)
+            confirmationScreen.classList.add('hidden');
+            bookingScreen.classList.remove('hidden');
+        }
+
+        // Custom Message Box (to replace Power Apps' Notify or alert())
+        function showMessageBox(title, message) {
+            // Create a simple modal for the error message
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white p-6 rounded-xl shadow-2xl max-w-sm w-full space-y-4">
+                    <h3 class="text-lg font-bold ${title === 'Error' ? 'text-red-600' : 'text-gray-900'}">${title}</h3>
+                    <p class="text-gray-700">${message}</p>
+                    <button id="closeModal" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 rounded-lg transition duration-150">OK</button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            document.getElementById('closeModal').onclick = () => {
+                document.body.removeChild(modal);
+            };
+        }
+
+
+        // Set the default date input to today's date
+        window.onload = function() {
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+            const dd = String(today.getDate()).padStart(2, '0');
+            pickupDateInput.value = `${yyyy}-${mm}-${dd}`;
+
+            setupTimeDropdowns(); // Populate the hour/minute dropdowns
+        };
+
+    </script>
+</body>
+</html>
